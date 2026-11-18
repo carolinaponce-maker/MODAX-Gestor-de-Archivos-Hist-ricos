@@ -3,13 +3,20 @@ on:
   push:
   pull_request:
   workflow_dispatch:
+permissions:
+  contents: read
 jobs:
   tests:
     runs-on: windows-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Compilar sintaxis
+        run: python -m compileall -q gestor_historicos tests run.py
+      - name: Importar interfaz sin abrir ventana
+        run: python -c "from gestor_historicos.app import App; print('UI import OK')"
       - name: Ejecutar pruebas
         run: python -m unittest discover -s tests -v
