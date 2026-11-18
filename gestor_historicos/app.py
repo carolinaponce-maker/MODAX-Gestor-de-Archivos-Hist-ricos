@@ -11,6 +11,7 @@ from tkinter import filedialog, messagebox, ttk
 
 from .core import validate_local_root
 from .storage import scan_to_sqlite, page, folder_summary, incidents_page
+from .export import export_inventory
 
 
 def years_before(today: date, years: int) -> date:
@@ -123,7 +124,8 @@ class App(tk.Tk):
                   font=("Segoe UI", 13, "bold")).pack(anchor="w")
         self.review_text = tk.Text(parent, height=20, wrap="word", state="disabled")
         self.review_text.pack(fill="both", expand=True, pady=8)
-        ttk.Label(parent, text="Exportacion Excel: pendiente de Entrega 1. No hay operaciones de copia ni borrado.").pack(anchor="w")
+        ttk.Button(parent, text="Exportar Excel de inventario", command=self.export_excel).pack(anchor="w", pady=8)
+        ttk.Label(parent, text="El Excel es informativo: aprobar filas NO activa ninguna migracion.").pack(anchor="w")
 
     @staticmethod
     def values(text):
@@ -251,6 +253,25 @@ class App(tk.Tk):
             if rows:
                 self.offset += 200
                 self.load_page()
+
+    def export_excel(self):
+        if not self.summary:
+            messagebox.showwarning("Sin inventario", "Primero ejecuta el analisis.")
+            return
+        if self.summary.status != "COMPLETO":
+            messagebox.showerror("Inventario incompleto", "No se exporta un inventario parcial o cancelado.")
+            return
+        selected = filedialog.asksaveasfilename(
+            title="Guardar inventario Excel fuera del origen",
+            defaultextension=".xlsx", filetypes=[("Excel", "*.xlsx")])
+        if not selected:
+            return
+        try:
+            count = export_inventory(self.db, self.summary.root, selected, self.summary.cutoff)
+        except Exception as exc:
+            messagebox.showerror("No se pudo exportar", str(exc))
+            return
+        messagebox.showinfo("Excel generado", f"Se exportaron {count} archivos. No se modificaron originales.")
 
     def close(self):
         if self.worker and self.worker.is_alive():
