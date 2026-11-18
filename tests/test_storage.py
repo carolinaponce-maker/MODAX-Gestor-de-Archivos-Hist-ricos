@@ -67,6 +67,18 @@ class StorageTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             scan_to_sqlite(Path("//server/share"), self.db, date(2020, 1, 1))
 
+    def test_db_parent_must_be_local_directory(self):
+        missing = self.base / "missing" / "inventario.sqlite"
+        with self.assertRaises(ValueError):
+            scan_to_sqlite(self.source, missing, date(2020, 1, 1))
+        self.assertFalse(missing.parent.exists())
+
+    def test_existing_db_not_overwritten_even_with_invalid_input(self):
+        self.db.write_bytes(b"sentinel")
+        with self.assertRaises(ValueError):
+            scan_to_sqlite(self.source, self.db, date(2020, 1, 1))
+        self.assertEqual(self.db.read_bytes(), b"sentinel")
+
     def test_pagination_limits(self):
         with self.assertRaises(ValueError):
             page(self.db, limit=10000)
