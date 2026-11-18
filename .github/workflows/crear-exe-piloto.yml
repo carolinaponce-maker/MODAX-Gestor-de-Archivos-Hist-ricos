@@ -1,0 +1,28 @@
+name: Construir EXE piloto local
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Instalar dependencias
+        run: python -m pip install openpyxl==3.1.5 pyinstaller==6.11.1
+      - name: Comprobar sintaxis
+        run: python -m compileall -q gestor_historicos tests run.py
+      - name: Pruebas unitarias
+        run: python -m unittest discover -s tests -v
+      - name: Construir EXE
+        run: python -m PyInstaller --noconfirm --clean --onefile --windowed --name MODAX_Gestor_Historicos_PILOTO run.py
+      - name: Publicar ejecutable de evaluacion
+        uses: actions/upload-artifact@v4
+        with:
+          name: MODAX-Gestor-Historicos-PILOTO
+          path: dist/MODAX_Gestor_Historicos_PILOTO.exe
+          retention-days: 7
