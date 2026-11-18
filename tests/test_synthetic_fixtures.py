@@ -37,8 +37,7 @@ class SyntheticFixtureTests(unittest.TestCase):
             self.assertEqual(result.protected, 1)
             self.assertEqual(len(page(db, search="viejo")), 1)
             self.assertEqual(len(page(db, old_only=True)), 1)
-            # Known gap: empty folders are not yet included in folder_summary.
-            self.assertNotIn("VACIA", {row[0] for row in folder_summary(db)})
+            self.assertIn("VACIA", {row[0] for row in folder_summary(db)})
 
     def test_excluded_relative_path_does_not_exclude_same_name_elsewhere(self):
         with tempfile.TemporaryDirectory() as tmp:
