@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS files(
 );
 CREATE INDEX IF NOT EXISTS idx_files_parent ON files(parent_path);
 CREATE INDEX IF NOT EXISTS idx_files_old ON files(old);
+CREATE TABLE IF NOT EXISTS directories(path TEXT PRIMARY KEY, protected INTEGER NOT NULL);
 CREATE TABLE IF NOT EXISTS incidents(id INTEGER PRIMARY KEY, path TEXT, detail TEXT);
 CREATE TABLE IF NOT EXISTS exclusions(path TEXT PRIMARY KEY, kind TEXT NOT NULL);
 """
@@ -103,6 +104,8 @@ def scan_to_sqlite(
                 break
             folder, inherited_protection = stack.pop()
             try:
+                folder_relative = str(folder.relative_to(root))
+                conn.execute("INSERT INTO directories(path,protected) VALUES (?,?)", (folder_relative, int(inherited_protection)))
                 with os.scandir(folder) as entries:
                     directories += 1
                     for entry in entries:
@@ -185,8 +188,9 @@ def page(db_path: str | Path, search: str = "", old_only: bool = False,
 def folder_summary(db_path: str | Path) -> list[tuple]:
     with sqlite3.connect(f"file:{Path(db_path).as_posix()}?mode=ro", uri=True) as conn:
         return conn.execute(
-            """SELECT parent_path,COUNT(*),SUM(size_bytes),SUM(old),SUM(protected)
-               FROM files GROUP BY parent_path ORDER BY parent_path COLLATE NOCASE"""
+            """SELECT d.path,COUNT(f.id),COALESCE(SUM(f.size_bytes),0),COALESCE(SUM(f.old),0),COALESCE(SUM(f.protected),0)
+               FROM directories d LEFT JOIN files f ON f.parent_path=d.path
+               GROUP BY d.path ORDER BY d.path COLLATE NOCASE"""
         ).fetchall()
 
 
