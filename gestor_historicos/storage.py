@@ -82,7 +82,11 @@ def scan_to_sqlite(
     db = Path(db_path)
     if db.exists():
         raise ValueError("La base de inventario ya existe; no se sobrescribe.")
-    db.parent.mkdir(parents=True, exist_ok=True)
+    # Validate destination before any filesystem write; reject network/reparse parents.
+    # The UI creates its private temporary workspace beforehand.
+    db_parent = validate_local_root(db.parent)
+    if db.is_symlink():
+        raise ValueError("No se permite un enlace como archivo de inventario.")
     # DB must not reside inside the source tree, including the root itself.
     if db.resolve().is_relative_to(root.resolve()):
         raise ValueError("El inventario no puede guardarse dentro del origen.")
