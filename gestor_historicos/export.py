@@ -43,7 +43,7 @@ def export_inventory(db_path: str | Path, source_root: str | Path,
     El corte se utiliza para la clasificacion calculada durante el escaneo.
     """
     from openpyxl import Workbook
-    from openpyxl.worksheet.datavalidation import DataValidation
+
     from .core import validate_local_root
 
     root = validate_local_root(source_root)
@@ -93,12 +93,8 @@ def export_inventory(db_path: str | Path, source_root: str | Path,
                           "SI" if protected else "NO", "PENDIENTE", "", ""))
     folders.auto_filter.ref = f"A1:F{folder_count + 1}"
     files.auto_filter.ref = f"A1:N{count + 1}"
-    validation = DataValidation(type="list",
-                                formula1='"APROBAR,NO APROBAR,PENDIENTE"',
-                                allow_blank=False)
-    files.data_validations.add(validation)
-    if count:
-        validation.add(f"L2:L{count + 1}")
+    # La exportacion del Modulo 1 es informativa: no permite aprobar decisiones.
+    # Las validaciones editables se incorporaran en un modulo posterior.
 
     # Guardar en un temporal fuera del origen; enlace duro exclusivo evita
     # sobrescribir un archivo creado concurrentemente en el destino.
