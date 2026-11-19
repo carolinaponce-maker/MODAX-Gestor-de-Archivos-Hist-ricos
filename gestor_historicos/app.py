@@ -218,7 +218,7 @@ class App(tk.Tk):
             "RESUMEN POR CARPETA (hasta 100 primeras):",
         ]
         for folder, count, size, old, prot in folders[:100]:
-            label = "ANTIGUA" if old == count else "RECIENTE" if old == 0 else "MIXTA"
+            label = "VACÍA" if count == 0 else "ANTIGUA" if old == count else "RECIENTE" if old == 0 else "MIXTA"
             lines.append(f"{folder}: {count} archivos, {size / 1048576:.2f} MB, {label}, {prot} protegidos")
         lines.append("\nINCIDENCIAS (hasta 100 primeras):")
         lines.extend(f"{path}: {detail}" for path, detail in incidents)

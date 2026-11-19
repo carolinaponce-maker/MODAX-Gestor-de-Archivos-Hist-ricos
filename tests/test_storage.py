@@ -53,6 +53,12 @@ class StorageTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             scan_to_sqlite(self.source, self.db, date(2020, 1, 1), excluded_paths={"../escape"})
 
+    def test_reject_absolute_exclusion_paths(self):
+        for bad in ("/absoluta", "\\\\servidor\\carpeta", "C:\\Windows", "a/../b"):
+            with self.subTest(bad=bad):
+                with self.assertRaises(ValueError):
+                    scan_to_sqlite(self.source, self.db, date(2020, 1, 1), excluded_paths={bad})
+
     def test_extensions_and_folder_exclusions(self):
         (self.source / "skip").mkdir()
         (self.source / "skip" / "a.txt").write_text("skip")
