@@ -60,8 +60,9 @@ def _normalise_names(values: set[str] | None) -> set[str]:
 def _safe_relative_paths(values: set[str] | None) -> set[str]:
     result = set()
     for raw in values or set():
-        v = raw.replace("/", "\\").strip("\\ ").casefold()
-        if not v or v.startswith("\\") or any(p in ("", ".", "..") for p in v.split("\\")):
+        v = raw.strip().replace("/", "\\").casefold()
+        if (not v or v.startswith("\\") or ":" in v
+                or any(p in ("", ".", "..") for p in v.split("\\"))):
             raise ValueError("Ruta de exclusion/proteccion no valida")
         result.add(v)
     return result
