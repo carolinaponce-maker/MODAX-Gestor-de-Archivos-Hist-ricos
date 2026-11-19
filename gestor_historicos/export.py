@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from contextlib import closing
 from pathlib import Path
 import os
 import sqlite3
@@ -63,7 +64,7 @@ def export_inventory(db_path: str | Path, source_root: str | Path,
     _header(files, HEADERS)
     count = folder_count = 0
     today = datetime.now().date()
-    with sqlite3.connect(f"file:{Path(db_path).as_posix()}?mode=ro", uri=True) as conn:
+    with closing(sqlite3.connect(f"file:{Path(db_path).as_posix()}?mode=ro", uri=True)) as conn:
         for folder, total, size, old, protected in conn.execute(
             """SELECT d.path, COUNT(f.id), COALESCE(SUM(f.size_bytes),0),
                       COALESCE(SUM(f.old),0), COALESCE(SUM(f.protected),0)
