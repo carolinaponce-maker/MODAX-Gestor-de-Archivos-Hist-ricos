@@ -5,6 +5,7 @@ The scan itself only reads source files. No copy, move or delete functions.
 """
 from __future__ import annotations
 from dataclasses import dataclass
+from contextlib import closing
 from datetime import date, datetime
 from pathlib import Path
 from threading import Event
@@ -172,7 +173,7 @@ def page(db_path: str | Path, search: str = "", old_only: bool = False,
     """Paginated, parameterised read-only query."""
     if not 1 <= limit <= 500 or offset < 0:
         raise ValueError("Paginacion fuera de rango")
-    with sqlite3.connect(f"file:{Path(db_path).as_posix()}?mode=ro", uri=True) as conn:
+    with closing(sqlite3.connect(f"file:{Path(db_path).as_posix()}?mode=ro", uri=True)) as conn:
         sql = "SELECT relative_path,size_bytes,modified_at,old,protected FROM files WHERE 1=1"
         args: list[object] = []
         if search:
@@ -186,7 +187,7 @@ def page(db_path: str | Path, search: str = "", old_only: bool = False,
 
 
 def folder_summary(db_path: str | Path) -> list[tuple]:
-    with sqlite3.connect(f"file:{Path(db_path).as_posix()}?mode=ro", uri=True) as conn:
+    with closing(sqlite3.connect(f"file:{Path(db_path).as_posix()}?mode=ro", uri=True)) as conn:
         return conn.execute(
             """SELECT d.path,COUNT(f.id),COALESCE(SUM(f.size_bytes),0),COALESCE(SUM(f.old),0),COALESCE(SUM(f.protected),0)
                FROM directories d LEFT JOIN files f ON f.parent_path=d.path
@@ -195,5 +196,5 @@ def folder_summary(db_path: str | Path) -> list[tuple]:
 
 
 def incidents_page(db_path: str | Path, limit: int = 100) -> list[tuple]:
-    with sqlite3.connect(f"file:{Path(db_path).as_posix()}?mode=ro", uri=True) as conn:
+    with closing(sqlite3.connect(f"file:{Path(db_path).as_posix()}?mode=ro", uri=True)) as conn:
         return conn.execute("SELECT path,detail FROM incidents ORDER BY id LIMIT ?", (limit,)).fetchall()
