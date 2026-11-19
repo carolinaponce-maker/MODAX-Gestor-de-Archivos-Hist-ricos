@@ -1,9 +1,9 @@
 name: Construir EXE piloto local
 on:
   workflow_dispatch:
-  push:
+  pull_request:
     branches:
-      - fix/modulo1-exportacion-escalable-20261119
+      - main
 permissions:
   contents: read
 jobs:
